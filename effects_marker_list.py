@@ -14,10 +14,20 @@ def get_file_path():
                 initialdir=os.path.expanduser('~/Desktop'))
     make_marker_list(user_filepath)
 
+def validate_track_number(track_name):
+    try:
+        temp_number = int(track_name)
+    except ValueError:
+        temp_number = 1
+    track = 'V' + str(temp_number)
+    return(track)
+
 # Takes the file given by user along with the users parameters to create a new markers list.
 def make_marker_list(filepath):
     user_input_window.destroy()
     effects_list = []   # Empty list that will be filled with matching effect name from user given file.
+    in_effects_list = False
+    track = validate_track_number(track_name.get())
     
     # Split file name and file path to create the new file name in the same location.
     effects_file_path = os.path.dirname(filepath)
@@ -32,8 +42,13 @@ def make_marker_list(filepath):
     # Opens file and checks for effect name in each line from file.
     with open(filepath) as fp:
         for line in fp:
-            if effect_name.get().lower() in line.lower():
+            if 'Effect Location Summary:' in line:
+                in_effects_list = False
+            if effect_name.get().lower() in line.lower() and in_effects_list == True:
                 effects_list.append(line.lstrip())
+            if '  __ TRACK __  __ START TC __  ___ END TC ___    __________ EFFECT NAME __________' in line:
+                in_effects_list = True
+
 
     # If effects were found create a dataframe from information gathered from file of effects.
     if(len(effects_list) > 0):
@@ -50,7 +65,7 @@ def make_marker_list(filepath):
         marker_df.sort_values('start_tc', inplace = True)   # Sort by earliest timecode
         # Remove an unwanted text from 'comment', 'track', 'start_tc' rows.
         marker_df.loc[:, 'comment'] = marker_df.loc[:, 'comment'].apply(lambda row: row.split('\n', 1)[0].lstrip())
-        marker_df.loc[:, 'track'] = marker_df.loc[:, 'track'].apply(lambda row: row.replace('(', '').replace(')', ''))
+        marker_df.loc[:, 'track'] = track
         marker_df.loc[:, 'start_tc'] = marker_df.loc[:, 'start_tc'].apply(lambda row: row.lstrip())
         # Write text tab delimited file with no index or header information.
         # Media Composer doesn't need that information.
@@ -70,6 +85,8 @@ effect_name.set('')
 marker_choice = tk.IntVar()
 marker_name = tk.StringVar()
 marker_name.set('')
+track_name = tk.StringVar()
+track_name.set('')
 marker_choice.set(0)
 
 user_info.pack()
@@ -83,9 +100,10 @@ tk.ttk.Label(user_info, text = 'Name of the effect you are looking for:').grid()
 tk.ttk.Entry(user_info, textvariable = effect_name).grid(sticky = tk.W)
 tk.ttk.Label(user_info, text = 'Please enter a name for your markers:').grid()
 tk.ttk.Entry(user_info, textvariable = marker_name).grid(sticky = tk.W)
+tk.ttk.Label(user_info, text = 'Please enter a track for your markers:').grid()
+tk.ttk.Entry(user_info, textvariable = track_name).grid(sticky = tk.W)
 tk.ttk.Button(user_info, text = 'Cancel', command = user_input_window.destroy).grid(sticky = tk.W, row = 99, column = 0)
 tk.ttk.Button(user_info, text = 'Okay', command = get_file_path).grid(sticky = tk.W, row = 99, column = 1)
 
 
 user_input_window.mainloop()
-
