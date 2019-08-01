@@ -7,7 +7,7 @@ Takes an effects summary report from AVID Media Composer and searches for a give
 - Python 3
 - Pandas  
       ```pip install pandas```
-- Copy and paste effects summary into a next blank text file.
-- Remove all contents before  
-      ```----- Effect Plug-in Summary: -----```
+- Copy and paste effects summary into a next blank text file.  
 
+### Bugs
+- Text file encoding out of Media Composer throws an 'utf-8' decoding error.  Current work around is copying media into a new blank text file, saving and then using that text file to run in the python script.
